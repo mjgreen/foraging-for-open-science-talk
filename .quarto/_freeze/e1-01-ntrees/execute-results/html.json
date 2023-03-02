@@ -1,0 +1,14 @@
+{
+  "hash": "4034980511ec16c7615dea2d213efb9d",
+  "result": {
+    "markdown": "## e1 Number of trees\n\n\n::: {.cell}\n\n```{.r .cell-code}\nlibrary(tidyverse)\nlibrary(ez)\nlibrary(gt)\nlibrary(rsvg)\nlibrary(svglite)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\noptions(contrasts=c(\"contr.sum\",\"contr.poly\"))\noptions(dplyr.summarise.inform=F)\npd <- position_dodge(0.1)\n```\n:::\n\n::: {.cell}\n\n```{.r .cell-code}\ne1 <- readRDS(\"001-00-e1-data.RDS\")\n\n# remove things from the raw data to make it suitable \n# for this particular analysis\n\n# remove samples that did not look at a tree\ne1 <- e1 %>% \n  filter(fl>0)\n\n# remove the second (and any subsequent) *consecutive* duplicates\ne1 <- e1 %>% \n  filter(is.na(tl != lag(tl)) | tl != lag(tl))\n\n# remove trials where they failed to get 10 fruit\ne1 <- e1 %>% \n  group_by(pp, te) %>% \n  mutate(max_fr = max(fr)) %>% \n  ungroup() %>% \n  filter(max_fr==10)\n\ne1_ntrees <-\n  e1 %>%\n  transmute(\n    ex =1,\n    pp           = as_factor(pp),\n    trial        = tb, # is 1 to 10 for each condition of \"resources\"\n    rr    = factor(rr, levels=c(\"dispersed\", \"patchy\"), labels=c(\"dispersed\", \"patchy\")),\n    st        = as_factor(ifelse(tb<=5, \"early\", \"late\")),\n    index        = ix,\n    tree         = tl)\n\ne1_ntrees_TRIAL_SUMS <- \n  e1_ntrees %>% \n  group_by(ex, pp, rr, st, trial) %>% \n  summarise(ntrees=n())\n\ne1_ntrees_PARTICIPANT_MEANS <-\n  e1_ntrees_TRIAL_SUMS %>% \n  group_by(ex, pp, rr, st) %>% \n  summarise(mean_ntrees_per_st = mean(ntrees))\n```\n:::\n\n\nSave plot data\n\n\n::: {.cell}\n\n```{.r .cell-code}\nsaveRDS(e1_ntrees_PARTICIPANT_MEANS,\"e1_ntrees_plot_data.rds\")\n```\n:::\n",
+    "supporting": [],
+    "filters": [
+      "rmarkdown/pagebreak.lua"
+    ],
+    "includes": {},
+    "engineDependencies": {},
+    "preserve": {},
+    "postProcess": true
+  }
+}

@@ -1,0 +1,83 @@
+## e1 Distance
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ez)
+library(gt)
+library(rsvg)
+library(svglite)
+```
+
+what was the Euclidian distance between tree visits?
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly"))
+options(dplyr.summarise.inform=F)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(ez)
+library(gt)
+pd <- position_dodge(0.1)
+```
+
+```{r}
+e1 <- readRDS("001-00-e1-data.RDS")
+
+# remove things from the raw data to make it suitable 
+# for this particular analysis
+
+# remove samples that did not look at a tree
+e1 <- e1 %>% 
+  filter(fl>0)
+
+# remove the second (and any subsequent) *consecutive* duplicates
+e1 <- e1 %>% 
+  filter(is.na(tl != lag(tl)) | tl != lag(tl))
+
+# remove trials where they failed to get 10 fruit
+e1 <- e1 %>% 
+  group_by(pp, te) %>% 
+  mutate(max_fr = max(fr)) %>% 
+  ungroup() %>% 
+  filter(max_fr==10) %>% 
+  select(-c(max_fr))
+```
+
+Annotate: what was the Euclidian distance between tree visits?
+
+This is sparse because not everything has fr of 0. Ok for the graph but not the ANoVA
+
+```{r}
+e1.distance <- e1
+e1.distance <- e1.distance %>%
+  group_by(across(c(ex,pp,rr,tb))) %>% 
+  mutate(distance = sqrt((lead(xx)-xx)^2 + (lead(yy)-yy)^2)) %>% 
+  ungroup()
+```
+
+Collapse over fruit-seeking events to yield mean distance at the stage:trial:launch level
+
+```{r}
+e1.distance.stl.means <- e1.distance %>% 
+  group_by(ex, pp, rr, st, tb, ll) %>% 
+  summarise(mean_distance = mean(distance, na.rm=TRUE))
+```
+
+Collapse over trials to yield stage:launch means
+
+```{r}
+e1.distance.sl.means <- e1.distance.stl.means %>% 
+  group_by(ex, pp, rr, st, ll) %>% 
+  summarise(mu_distance = mean(mean_distance))
+```
+
+Save plot data
+
+```{r}
+saveRDS(e1.distance.sl.means, "e1_distance_plot_data.rds")
+```
+
+

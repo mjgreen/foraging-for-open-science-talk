@@ -1,0 +1,66 @@
+## e1 Number of trees
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ez)
+library(gt)
+library(rsvg)
+library(svglite)
+```
+
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly"))
+options(dplyr.summarise.inform=F)
+pd <- position_dodge(0.1)
+```
+
+
+```{r}
+e1 <- readRDS("001-00-e1-data.RDS")
+
+# remove things from the raw data to make it suitable 
+# for this particular analysis
+
+# remove samples that did not look at a tree
+e1 <- e1 %>% 
+  filter(fl>0)
+
+# remove the second (and any subsequent) *consecutive* duplicates
+e1 <- e1 %>% 
+  filter(is.na(tl != lag(tl)) | tl != lag(tl))
+
+# remove trials where they failed to get 10 fruit
+e1 <- e1 %>% 
+  group_by(pp, te) %>% 
+  mutate(max_fr = max(fr)) %>% 
+  ungroup() %>% 
+  filter(max_fr==10)
+
+e1_ntrees <-
+  e1 %>%
+  transmute(
+    ex =1,
+    pp           = as_factor(pp),
+    trial        = tb, # is 1 to 10 for each condition of "resources"
+    rr    = factor(rr, levels=c("dispersed", "patchy"), labels=c("dispersed", "patchy")),
+    st        = as_factor(ifelse(tb<=5, "early", "late")),
+    index        = ix,
+    tree         = tl)
+
+e1_ntrees_TRIAL_SUMS <- 
+  e1_ntrees %>% 
+  group_by(ex, pp, rr, st, trial) %>% 
+  summarise(ntrees=n())
+
+e1_ntrees_PARTICIPANT_MEANS <-
+  e1_ntrees_TRIAL_SUMS %>% 
+  group_by(ex, pp, rr, st) %>% 
+  summarise(mean_ntrees_per_st = mean(ntrees))
+```
+
+Save plot data
+
+```{r}
+saveRDS(e1_ntrees_PARTICIPANT_MEANS,"e1_ntrees_plot_data.rds")
+```

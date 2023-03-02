@@ -1,0 +1,20 @@
+{
+  "index.qmd": {
+    "index.html": "0282b1d7"
+  },
+  "e1-01-ntrees.qmd": {
+    "e1-01-ntrees.html": "90089705"
+  },
+  "e1-02-revisits.qmd": {
+    "e1-02-revisits.html": "85d0b160"
+  },
+  "e1-03-retrieval.qmd": {
+    "e1-03-retrieval.html": "7f133749"
+  },
+  "e1-04-distance.qmd": {
+    "e1-04-distance.html": "ed9e616b"
+  },
+  "e1-99-combine-plots.qmd": {
+    "e1-99-combine-plots.html": "93480719"
+  }
+}

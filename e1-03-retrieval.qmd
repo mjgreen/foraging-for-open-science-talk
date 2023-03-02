@@ -1,0 +1,104 @@
+## e1 Retrieval Rate
+
+```{r, message=FALSE}
+library(tidyverse)
+library(ez)
+library(gt)
+library(rsvg)
+library(svglite)
+```
+
+Retrieval Rate is "How many trees did they visit to get this fruit?"
+
+```{r}
+options(contrasts=c("contr.sum","contr.poly"))
+options(dplyr.summarise.inform=F)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+
+```{r}
+library(tidyverse)
+library(ez)
+library(gt)
+pd <- position_dodge(0.1)
+```
+
+
+```{r}
+e1 <- readRDS("001-00-e1-data.RDS")
+
+# remove things from the raw data to make it suitable 
+# for this particular analysis
+
+# remove samples that did not look at a tree
+e1 <- e1 %>% 
+  filter(fl>0)
+
+# remove the second (and any subsequent) *consecutive* duplicates
+e1 <- e1 %>% 
+  filter(is.na(tl != lag(tl)) | tl != lag(tl))
+
+# remove trials where they failed to get 10 fruit
+e1 <- e1 %>% 
+  group_by(pp, te) %>% 
+  mutate(max_fr = max(fr)) %>% 
+  ungroup() %>% 
+  filter(max_fr==10) %>% 
+  select(-c(max_fr))
+
+
+```
+
+Annotate: "How many trees did they visit to get this fruit?"
+
+```{r}
+e1.retrieval <- e1
+e1.retrieval$n_trees_per_fruit = NA
+j = 0
+for (k in seq_along(e1.retrieval$ix)) {
+ j = j + 1
+ if (e1.retrieval[k, 'fl']==2) {
+   e1.retrieval[k, 'n_trees_per_fruit'] = j
+   j = 0
+ }
+}
+```
+
+You don't want to retain zero counts because
+there is no such thing as 0 for "How many trees did they visit to get this fruit?"
+
+```{r}
+e1.retrieval <- e1.retrieval %>%  
+  filter(n_trees_per_fruit != 0)
+```
+
+The data are valid row-per-sample here.
+
+We want to collapse to the level of the fruit-seeking event.
+
+By definition, fr==0 is NA for n_trees_per_fruit -- they haven't got a fruit yet, so they can't have visited any trees to get to no fruit.
+
+There is no such thing as 0 for "How many trees did they visit to get this fruit?" so we don't do anything about having a sparse matrix.
+
+The minimum number of trees looked at to get a fruit is 1: the look that scored the fruit.
+
+```{r}
+e1.retrieval_per_fruit <- e1.retrieval %>% 
+  group_by(across(c(ex,pp,rr,st,tb,fr))) %>% 
+  summarise(retrieval_per_fruit = sum(na.rm=T,n_trees_per_fruit))
+```
+
+Collapse over trials to yield average per-fruit n trees
+
+```{r}
+e1.mean_retrieval_per_fruit <- e1.retrieval_per_fruit %>% 
+  group_by(across(c(ex,pp,rr, fr))) %>% 
+  summarise(mean_retrieval_per_fruit = mean(retrieval_per_fruit))
+```
+
+Make plot data
+
+```{r}
+saveRDS(e1.mean_retrieval_per_fruit,"e1_retrieval_plot_data.rds")
+```

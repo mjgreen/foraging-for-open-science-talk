@@ -1,0 +1,26 @@
+project:
+  type: book
+  output-dir: docs
+
+book:
+  title: "fgms-2023"
+  author: "Matt Green"
+  date: "01/29/2023"
+  chapters:
+    - index.qmd
+    - e1-01-ntrees.qmd
+    - e1-02-revisits.qmd
+    - e1-03-retrieval.qmd
+    - e1-04-distance.qmd
+    - e1-99-combine-plots.qmd
+
+format:
+  html:
+    theme: cosmo
+    page-layout: full
+
+  # pdf:
+  #   documentclass: scrreprt
+
+
+
